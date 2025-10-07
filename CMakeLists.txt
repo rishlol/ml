@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(linear_regression ../src/linear_regression.cpp)
+add_executable(linear_regression src/linear_regression.cpp)
 
 find_package(xtensor CONFIG REQUIRED)
 find_package(Boost CONFIG REQUIRED COMPONENTS program_options)

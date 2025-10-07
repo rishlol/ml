@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <tuple>
+#include <ctime>
 #include "boost/program_options.hpp"
 #include "xtensor/containers/xarray.hpp"
 #include "xtensor/io/xcsv.hpp"
@@ -32,16 +34,36 @@ int main(int argc, char **argv) {
     std::string input = vm["input-file"].as<std::string>();
     std::cout << input << std::endl;
 
+    // Load csv filestream
     std::ifstream f(input);
     if (f.fail()) {
-        std::cerr << "Could not open file!";
+        std::cerr << "Could not open file!\n";
         return 1;
     }
+    
+    // Get csv header
     std::string csv_header;
     if(!no_header)
         std::getline(f, csv_header);
-    auto expr = xt::load_csv<double>(f);
-    std::cout << expr << std::endl;
+    
+    // Load csv into xarray
+    xt::xarray<double> csv = xt::load_csv<double>(f);
+    
+    // Create label array (y_hat)
+    xt::xarray<double> y_label = xt::col(csv, -1);
+
+    // Create feature vector with column of 1s for bias (built into weight vector)
+    xt::xarray<double> bias = xt::ones<double>({(int)csv.shape()[0], 1});
+    xt::xarray<double> features_wbias = xt::hstack(xt::xtuple(bias, xt::view(csv, xt::all(), xt::range(0, (int)csv.shape()[1] - 1))));
+    std::tuple s = std::make_tuple(features_wbias.shape()[0], features_wbias.shape()[1]);
+    
+    // Train
+    int epochs = 20;
+    double lr = 1e-5;
+    xt::xarray<double> weights = xt::ones<double>({std::get<1>(s), std::get<0>(s)});
+    for(ssize_t i = 0; i < epochs; i += 1) {
+        
+    }
 
     return 0;
 }
