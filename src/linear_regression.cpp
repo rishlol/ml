@@ -51,33 +51,36 @@ int main(int argc, char **argv) {
     xt::xarray<double> csv = xt::load_csv<double>(f);
     
     // Create label array (y_hat) and normalize
-    xt::xarray<double> y_label = xt::col(csv, -1);
+    xt::xarray<double> y_label = xt::col(csv, csv.shape().at(1) - 1);
     y_label = (y_label - xt::mean(y_label)()) / xt::stddev(y_label)();
-    y_label = y_label.reshape({ (ssize_t)y_label.shape().at(0), (ssize_t)1 });
+    y_label.reshape({ (size_t)y_label.shape().at(0), (size_t)1 });
 
     // Create feature vector with column of 1s for bias (built into weight vector)
-    // Remove last column of csv since it stores labels
-    xt::xarray<double> bias = xt::ones<double>({(int)csv.shape().at(0), 1});
-    xt::xarray<double> feat_bias = xt::hstack(xt::xtuple(
-        bias,
-        xt::view( csv, xt::all(), xt::range(0, (int)csv.shape().at(1) - 1) )
-    ));
+    //xt::xarray<double> bias = xt::ones<double>({(size_t)csv.shape().at(0), (size_t)1});
+    //xt::xarray<double> feat_bias = xt::hstack(xt::xtuple(
+    //    bias,
+    //    xt::view( csv, xt::all(), xt::range<size_t>((size_t)0, (size_t)csv.shape().at(1) - 1) )
+    //));
+    xt::xarray<double> feat_bias = xt::ones<double>({ (size_t)csv.shape().at(0), (size_t)csv.shape().at(1) - 1 });
+    for(size_t c = 0; c < csv.shape().at(1) - 1; c += 1) {
+        xt::col(feat_bias, c + 1) = xt::col(csv, c);
+    }
     std::tuple fb_shape = std::make_tuple(feat_bias.shape().at(0), feat_bias.shape().at(1));
 
     // Normalize features
-    for(int c = 2; c < std::get<1>(fb_shape); c += 1) {
+    for(size_t c = 2; c < std::get<1>(fb_shape); c += 1) {
         xt::col(feat_bias, c) = (xt::col(feat_bias, c) - xt::mean(xt::col(feat_bias, c))()) / xt::stddev(xt::col(feat_bias, c))();
     }
     
     // Define hyperparameters
-    int epochs = 5000;
+    size_t epochs = 5000;
     double lr = 7.5e-4;
     
     // Weight vector
-    xt::xarray<double> weights = xt::ones<double>({ (ssize_t)std::get<1>(fb_shape), (ssize_t)1 });
+    xt::xarray<double> weights = xt::ones<double>({ (size_t)std::get<1>(fb_shape), (size_t)1 });
 
     // Train
-    for(ssize_t i = 0; i < epochs; i += 1) {
+    for(size_t i = 0; i < epochs; i += 1) {
         // forward pass
         xt::xarray<double> y_train = xt::linalg::dot(feat_bias, weights);
         double loss = MSE_loss(y_label, y_train);
