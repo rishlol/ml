@@ -150,8 +150,8 @@ void LinearRegression::train(size_t epochs, double lr) {
         reg_array grad = (2.0 / (double)std::get<0>(fb_shape)) * xt::linalg::dot(xt::transpose(*feat_bias), (y_train - *y_label));
         weights -= lr * grad;
     }
-    delete feat_bias;
-    delete y_label;
+    delete_feat_bias();
+    delete_y_label();
 }
 
 /**
@@ -179,14 +179,14 @@ reg_array LinearRegression::output_raw(reg_array input_feat) {
  * @return Model outputs.
  */
 reg_array LinearRegression::output(reg_array input_feat) {
-    return std::move((*this)(input_feat));
-}
-
-reg_array LinearRegression::operator()(reg_array input_feat) {
     for(size_t c = 3; c < input_feat.shape().at(1); c += 1) {
         ZScaleNormalizer c_norm = feat_norms.at(c);
         xt::col(input_feat, c) = (xt::col(input_feat, c) - c_norm.mean) / c_norm.std;
     }
     reg_array y = xt::linalg::dot(input_feat, weights);
     return std::move(y);
+}
+
+reg_array LinearRegression::operator()(reg_array input_feat) {
+    return std::move(this->output(input_feat));
 }

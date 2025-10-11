@@ -37,9 +37,17 @@ public:
     LinearRegression(Dataset &, bool);
     LinearRegression(Dataset &);
 
-    ~LinearRegression() {
+    inline void delete_feat_bias() {
         delete feat_bias;
+        feat_bias = nullptr;
+    }
+    inline void delete_y_label() {
         delete y_label;
+        y_label = nullptr;
+    }
+    ~LinearRegression() {
+        delete_feat_bias();
+        delete_y_label();
     }
 
     inline reg_array & getLabels() { return *y_label; }
