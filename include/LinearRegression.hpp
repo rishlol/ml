@@ -1,7 +1,6 @@
 #pragma once
 #include "Dataset.hpp"
 #include <tuple>
-#include <vector>
 #include <unordered_map>
 #include "xtensor/containers/xarray.hpp"
 
@@ -25,17 +24,14 @@ struct ZScaleNormalizer {
 
 class LinearRegression {
 private:
-    reg_array *y_label;
-    reg_array *feat_bias;          // (n, d + 1)
-    reg_array weights;             // (d + 1, 1)
+    reg_array *y_label = nullptr;
+    reg_array *feat_bias = nullptr;         // (n, d + 1)
+    reg_array weights;                      // (d + 1, 1)
     std::tuple<size_t, size_t> fb_shape;
 
     bool normalizeLabels = false;
     ZScaleNormalizer y_norm;
     std::unordered_map<size_t, ZScaleNormalizer> feat_norms;
-public:
-    LinearRegression(Dataset &, bool);
-    LinearRegression(Dataset &);
 
     inline void delete_feat_bias() {
         delete feat_bias;
@@ -45,6 +41,10 @@ public:
         delete y_label;
         y_label = nullptr;
     }
+public:
+    LinearRegression(Dataset &, bool);
+    LinearRegression(Dataset &);
+
     ~LinearRegression() {
         delete_feat_bias();
         delete_y_label();
