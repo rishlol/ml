@@ -3,18 +3,20 @@
 #include <string>
 #include "xtensor/containers/xarray.hpp"
 
+typedef xt::xarray<double> data_array;
+
 class Dataset {
 private:
     bool good;
-    xt::xarray<double> features;
-    xt::xarray<double> labels;
+    data_array features;
+    data_array labels;
 public:
     Dataset(std::string);
     Dataset(std::string, bool);
     Dataset(const Dataset &) = default;
 
-    inline xt::xarray<double> & get_features() { return features; }
-    inline xt::xarray<double> & get_labels() { return labels; }
+    inline data_array & get_features() { return features; }
+    inline data_array & get_labels() { return labels; }
 
     inline bool isGood() { return good; }
 };

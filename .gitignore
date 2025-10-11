@@ -2,3 +2,6 @@
 .DS_Store
 .vscode
 build
+
+linear_regression_data
+support_vector_machine_data

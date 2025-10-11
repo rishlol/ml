@@ -1,6 +1,8 @@
 #pragma once
 #include "Dataset.hpp"
+#include "utils/ML_Utils.hpp"
 #include <tuple>
+#include <unordered_map>
 #include "xtensor/containers/xarray.hpp"
 
 typedef xt::xarray<double> svm_array;
@@ -11,6 +13,8 @@ private:
     svm_array *feat_bias = nullptr;         // (n, d + 1)
     svm_array weights;                      // (d + 1, n)
     std::tuple<size_t, size_t> fb_shape;
+
+    std::unordered_map<size_t, ZScaleNormalizer> feat_norms;
 
     inline void delete_feat_bias() {
         delete feat_bias;

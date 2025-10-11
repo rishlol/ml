@@ -1,26 +1,11 @@
 #pragma once
 #include "Dataset.hpp"
+#include "utils/ML_Utils.hpp"
 #include <tuple>
 #include <unordered_map>
 #include "xtensor/containers/xarray.hpp"
 
 typedef xt::xarray<double> reg_array;
-struct ZScaleNormalizer {
-    double mean;
-    double std;
-
-    ZScaleNormalizer() = default;
-    /**
-     * @brief Initialize ZScaleNormalizer struct.
-     * 
-     * @param m Mean of normalizer.
-     * @param s Standard deviation of normalizer.
-     */
-    ZScaleNormalizer(double m, double s) {
-        mean = m;
-        std = s;
-    }
-};
 
 class LinearRegression {
 private:

@@ -31,7 +31,7 @@ Dataset::Dataset(std::string input, bool no_header) {
     std::string csv_header;
     if(!no_header)
         std::getline(f, csv_header);
-    xt::xarray<double> csv = xt::load_csv<double>(f);
+    data_array csv = xt::load_csv<double>(f);
 
     // Extract last columns (labels)
     labels = xt::col(csv, csv.shape().at(1) - 1);
