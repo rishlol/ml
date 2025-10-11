@@ -14,3 +14,6 @@ link_libraries(xtensor xtensor-blas Boost::program_options)
 
 add_executable(linear_regression lin_reg.cpp src/LinearRegression.cpp src/Dataset.cpp)
 target_include_directories(linear_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_executable(support_vector_machine svm.cpp src/Dataset.cpp)
+target_include_directories(support_vector_machine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
