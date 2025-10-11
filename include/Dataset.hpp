@@ -6,11 +6,15 @@
 class Dataset {
 private:
     bool good;
-    xt::xarray<double> csv;
+    xt::xarray<double> features;
+    xt::xarray<double> labels;
 public:
-    Dataset(std::string, bool);
     Dataset(std::string);
+    Dataset(std::string, bool);
+    Dataset(const Dataset &) = default;
 
-    inline xt::xarray<double> & get_csv() { return csv; }
+    inline xt::xarray<double> & get_features() { return features; }
+    inline xt::xarray<double> & get_labels() { return labels; }
+
     inline bool isGood() { return good; }
 };

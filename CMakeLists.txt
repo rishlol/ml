@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "vckpt toolchain file")
+cmake_minimum_required(VERSION 3.15)
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "vckpg toolchain file")
 
 project(ml VERSION 1.0.0 LANGUAGES CXX)
 
