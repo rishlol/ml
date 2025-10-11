@@ -9,6 +9,18 @@ typedef xt::xarray<double> reg_array;
 struct ZScaleNormalizer {
     double mean;
     double std;
+
+    ZScaleNormalizer() = default;
+    /**
+     * @brief Initialize ZScaleNormalizer struct.
+     * 
+     * @param m Mean of normalizer.
+     * @param s Standard deviation of normalizer.
+     */
+    ZScaleNormalizer(double m, double s) {
+        mean = m;
+        std = s;
+    }
 };
 
 class LinearRegression {
@@ -21,17 +33,6 @@ private:
     bool normalizeLabels = false;
     ZScaleNormalizer y_norm;
     std::unordered_map<size_t, ZScaleNormalizer> feat_norms;
-protected:
-    template<typename T>
-    static bool xarray_same_shape(xt::xarray<T> a1, xt::xarray<T> a2) {
-        bool differentShape = a1.shape().size() != a2.shape().size();
-        if(differentShape) { std::cerr << "Different number of dimensions!\n"; return false; }
-        for(int i = 0; i < a1.shape().size(); i += 1) {
-            if(a1.shape().at(i) != a2.shape().at(i)) { std::cerr << "Different number of elements in "
-                                                                 << i << " dimension!\n"; return false; }
-        }
-        return true;
-    }
 public:
     LinearRegression(Dataset &, bool);
     LinearRegression(Dataset &);
@@ -45,10 +46,22 @@ public:
     inline double getYSTD() const { return y_norm.std; }
 
     static reg_array generate_feat_bias(reg_array &);
-    static double MSE_loss(const reg_array &, const reg_array &);
+    static double MSE(const reg_array &, const reg_array &);
+    static double SSE(const reg_array &, const reg_array &);
+    static double R_Squared(const reg_array &, const reg_array &);
     void train(size_t, double);
-    reg_array eval(reg_array &);
-    reg_array output(reg_array &);
+    reg_array output_raw(reg_array);
+    reg_array output(reg_array);
+    reg_array operator()(reg_array);
 
-    reg_array operator()(reg_array &);
+    template<typename T>
+    static bool xarray_same_shape(xt::xarray<T> a1, xt::xarray<T> a2) {
+        bool differentShape = a1.shape().size() != a2.shape().size();
+        if(differentShape) { std::cerr << "Different number of dimensions!\n"; return false; }
+        for(int i = 0; i < a1.shape().size(); i += 1) {
+            if(a1.shape().at(i) != a2.shape().at(i)) { std::cerr << "Different number of elements in "
+                                                                 << i << " dimension!\n"; return false; }
+        }
+        return true;
+    }
 };
