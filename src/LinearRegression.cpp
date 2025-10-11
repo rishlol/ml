@@ -9,6 +9,7 @@
 /**
  * @brief Create LinearRegression from Dataset.
  * 
+ * Prepares LinearRegression object for training.
  * Dataset d already stores feature and labels.
  * Constructor takes Dataset object and stores features and labels.
  * Also normalizes labels, adds bias column to feature matrix, initializes weights, stores label normalization information.
@@ -19,22 +20,22 @@
 LinearRegression::LinearRegression(Dataset &d, bool norm_lab) {
     // Get labels and normalize if needed
     normalizeLabels = norm_lab;
-    y_label = d.get_labels();
+    y_label = new reg_array(d.get_labels());
     if(normalizeLabels) {
-        y_norm.mean = xt::mean(y_label)();
-        y_norm.std = xt::stddev(y_label)();
-        y_label = (y_label - y_norm.mean) / y_norm.std;
+        y_norm.mean = xt::mean(*y_label)();
+        y_norm.std = xt::stddev(*y_label)();
+        *y_label = (*y_label - y_norm.mean) / y_norm.std;
     }
 
     // Create feature vector with bias column (first column)
-    feat_bias = generate_feat_bias(d.get_features());
+    feat_bias = new reg_array(generate_feat_bias(d.get_features()));
 
     // Store feature matrix shape and normalize
-    fb_shape = std::make_tuple(feat_bias.shape().at(0), feat_bias.shape().at(1));
+    fb_shape = std::make_tuple(feat_bias->shape().at(0), feat_bias->shape().at(1));
     for(size_t c = 3; c < std::get<1>(fb_shape); c += 1) {
-        feat_norms.insert({ c, ZScaleNormalizer(xt::mean(xt::col(feat_bias, c))(), xt::stddev(xt::col(feat_bias, c))()) });
+        feat_norms.insert({ c, ZScaleNormalizer(xt::mean(xt::col(*feat_bias, c))(), xt::stddev(xt::col(*feat_bias, c))()) });
         ZScaleNormalizer c_norm = feat_norms.at(c);
-        xt::col(feat_bias, c) = (xt::col(feat_bias, c) - c_norm.mean) / c_norm.std;
+        xt::col(*feat_bias, c) = (xt::col(*feat_bias, c) - c_norm.mean) / c_norm.std;
     }
     
     // Initialize weights
@@ -64,19 +65,19 @@ reg_array LinearRegression::generate_feat_bias(reg_array &features) {
  * 
  * Takes model outputs and labels and calculates mean squared error.
  * 
- * @param y_label xarray of expected/desired model output.
- * @param y_train xarray of model outputs.
+ * @param y_lab xarray of expected/desired model output.
+ * @param y xarray of model outputs.
  * @return MSE value (double).
  */
-double LinearRegression::MSE(const reg_array &y_label, const reg_array &y_train) {
+double LinearRegression::MSE(const reg_array &y_lab, const reg_array &y) {
     // Make sure input shapes are the same
-    if(!xarray_same_shape(y_label, y_train)) {
+    if(!xarray_same_shape(y_lab, y)) {
         std::cerr << "Cannot calculate loss! y_label and y_train have different dimensions!\n";
         return -1;
     }
 
     // MSE
-    reg_array sq_diff = xt::square(y_label - y_train);
+    reg_array sq_diff = xt::square(y_lab - y);
     double m = xt::mean(sq_diff)();
     return m;
 }
@@ -86,19 +87,19 @@ double LinearRegression::MSE(const reg_array &y_label, const reg_array &y_train)
  * 
  * Takes model outputs and labels and calculates sum squared error.
  * 
- * @param y_label xarray of expected/desired model output.
- * @param y_train xarray of model outputs.
+ * @param y_lab xarray of expected/desired model output.
+ * @param y xarray of model outputs.
  * @return SSE value (double).
  */
-double LinearRegression::SSE(const reg_array &y_label, const reg_array &y_train) {
+double LinearRegression::SSE(const reg_array &y_lab, const reg_array &y) {
     // Make sure input shapes are the same
-    if(!xarray_same_shape(y_label, y_train)) {
+    if(!xarray_same_shape(y_lab, y)) {
         std::cerr << "Cannot calculate loss! y_label and y_train have different dimensions!\n";
         return -1;
     }
 
     // SSE
-    reg_array sq_diff = xt::square(y_label - y_train);
+    reg_array sq_diff = xt::square(y_lab - y);
     double s = xt::sum(sq_diff)();
     return s;
 }
@@ -110,21 +111,23 @@ double LinearRegression::SSE(const reg_array &y_label, const reg_array &y_train)
  * This can be used to evaluate model performance.
  * A R^2 value close to 1 indicates good performance.
  * 
- * @param y_label xarray of expected/desired model output.
- * @param y_train xarray of model outputs.
+ * @param y_lab xarray of expected/desired model output.
+ * @param y xarray of model outputs.
  * @return R^2 value (double).
  */
-double LinearRegression::R_Squared(const reg_array &y_label, const reg_array &y_train) {
+double LinearRegression::R_Squared(const reg_array &y_lab, const reg_array &y) {
     // Make sure input shapes are the same
-    if(!xarray_same_shape(y_label, y_train)) {
+    if(!xarray_same_shape(y_lab, y)) {
         std::cerr << "Cannot calculate loss! y_label and y_train have different dimensions!\n";
         return std::numeric_limits<double>::quiet_NaN();
     }
 
     // R^2
     // reg_array avg_label = xt::full_like(y_label, xt::mean(y_label)());
-    double ss_tot = xt::sum(xt::square(y_label - xt::mean(y_label)()))();
-    double ss_res = xt::sum(xt::square(y_label - y_train))();
+    double ss_tot = xt::sum(xt::square(y_lab - xt::mean(y_lab)()))();
+    if(ss_tot == 0.0)
+        return 1;
+    double ss_res = xt::sum(xt::square(y_lab - y))();
     return 1 - (ss_res / ss_tot);
 }
 
@@ -139,14 +142,16 @@ double LinearRegression::R_Squared(const reg_array &y_label, const reg_array &y_
 void LinearRegression::train(size_t epochs, double lr) {
     for(size_t i = 0; i < epochs; i += 1) {
         // forward pass
-        reg_array y_train = xt::linalg::dot(feat_bias, weights);
-        double loss = MSE(y_label, y_train);
+        reg_array y_train = xt::linalg::dot(*feat_bias, weights);
+        double loss = MSE(*y_label, y_train);
         std::cout << "Epoch: " << i + 1 << " Loss: " << loss << std::endl;
 
         // Calculate gradient and update weights: (2 / N) * x * (f(x) - y)
-        reg_array grad = (2.0 / (double)std::get<0>(fb_shape)) * xt::linalg::dot(xt::transpose(feat_bias), (y_train - y_label));
+        reg_array grad = (2.0 / (double)std::get<0>(fb_shape)) * xt::linalg::dot(xt::transpose(*feat_bias), (y_train - *y_label));
         weights -= lr * grad;
     }
+    delete feat_bias;
+    delete y_label;
 }
 
 /**

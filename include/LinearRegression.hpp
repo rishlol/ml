@@ -25,8 +25,8 @@ struct ZScaleNormalizer {
 
 class LinearRegression {
 private:
-    reg_array y_label;
-    reg_array feat_bias;           // (n, d + 1)
+    reg_array *y_label;
+    reg_array *feat_bias;          // (n, d + 1)
     reg_array weights;             // (d + 1, 1)
     std::tuple<size_t, size_t> fb_shape;
 
@@ -37,8 +37,13 @@ public:
     LinearRegression(Dataset &, bool);
     LinearRegression(Dataset &);
 
-    inline reg_array & getLabels() { return y_label; }
-    inline reg_array & getFeatures() { return feat_bias; }
+    ~LinearRegression() {
+        delete feat_bias;
+        delete y_label;
+    }
+
+    inline reg_array & getLabels() { return *y_label; }
+    inline reg_array & getFeatures() { return *feat_bias; }
     inline reg_array & getWeights() { return weights; }
     inline std::tuple<size_t, size_t> getShape() const { return fb_shape; }
     inline int getNumFeatures() const { return std::get<1>(fb_shape) - 1; }
