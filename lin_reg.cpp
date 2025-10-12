@@ -28,10 +28,10 @@ int main(int argc, char **argv) {
     }
     
     // Create regression
-    LinearRegression lin_reg(data, true);
-    
+    LinearRegression lin_reg(data, true, 2);
+
     // Train
-    size_t epochs = cli.vm["epochs"].as<int>();
+    size_t epochs = cli.vm["epochs"].as<size_t>();
     double lr = cli.vm["lr"].as<double>();
     std::cout << "Training with epochs=" << epochs << " lr=" << lr << std::endl;
     lin_reg.train(epochs, lr);
@@ -52,14 +52,14 @@ void validation(LinearRegression &lin_reg, std::string val_file, bool no_header)
         return;
     }
 
-    xt::xarray<double> f1 = LinearRegression::generate_feat_bias(val_data.get_features());
-    xt::xarray<double> f2 = LinearRegression::generate_feat_bias(val_data.get_features());
+    xt::xarray<double> f1 = ML::generate_feat_bias(val_data.get_features());
+    xt::xarray<double> f2 = ML::generate_feat_bias(val_data.get_features());
     xt::xarray<double> res_norm = lin_reg(f1);                                                                  // Model output (raw)    
     xt::xarray<double> labels_norm = (val_data.get_labels() - lin_reg.getYMean()) / lin_reg.getYSTD();          // Labels (normalized)
     xt::xarray<double> res = lin_reg.output_raw(f2);                                                            // Model output (normalized)
     xt::xarray<double> labels = val_data.get_labels();                                                          // Labels (raw)
     std::cout << "MSE Loss (normalized): " << LinearRegression::MSE(labels_norm, res_norm) << std::endl
               << "MSE Loss (raw):        " << LinearRegression::MSE(labels, res) << std::endl
-              << "R^2 (normalized):      " << LinearRegression::R_Squared(labels_norm, res_norm) << std::endl
-              << "R^2 (raw):             " << LinearRegression::R_Squared(labels, res) << std::endl;
+              << "R^2 (normalized):      " << ML::R_Squared(labels_norm, res_norm) << std::endl
+              << "R^2 (raw):             " << ML::R_Squared(labels, res) << std::endl;
 }

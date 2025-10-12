@@ -6,6 +6,7 @@
 #include "xtensor/containers/xarray.hpp"
 
 typedef xt::xarray<double> svm_array;
+typedef ML::ZScaleNormalizer ZScaleNormalizer;
 
 class SupportVectorMachine {
 private:
@@ -25,7 +26,7 @@ private:
         y_label = nullptr;
     }
 public:
-    SupportVectorMachine();
+    SupportVectorMachine(Dataset &, size_t);
 
     ~SupportVectorMachine() {
         delete_feat_bias();
@@ -36,4 +37,8 @@ public:
     inline svm_array & getFeatures() { return *feat_bias; }
     inline svm_array & getWeights() { return weights; }
     inline std::tuple<size_t, size_t> getShape() const { return fb_shape; }
+    inline int getNumFeatures() const { return std::get<1>(fb_shape) - 1; }
+
+    static double Hinge(const svm_array &, const svm_array &);
+    void train(size_t, double);
 };

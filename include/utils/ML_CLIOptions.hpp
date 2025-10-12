@@ -25,7 +25,7 @@ public:
             ("input-file,I", po::value<std::string>()->default_value(""), "Input CSV file")
             ("test-file,T", po::value<std::string>()->default_value(""), "Validation CSV file")
             ("no-header,N", po::value<bool>()->default_value(false), "Flag if CSV file has no header")
-            ("epochs,e", po::value<int>()->default_value(20), "Number of epochs for training")
+            ("epochs,e", po::value<size_t>()->default_value(20), "Number of epochs for training")
             ("lr", po::value<double>()->default_value(1e-3), "Learning rate for training")
         ;
         
