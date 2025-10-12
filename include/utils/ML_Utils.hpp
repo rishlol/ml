@@ -1,6 +1,9 @@
 #pragma once
 #include "xtensor/containers/xarray.hpp"
 #include "xtensor/views/xview.hpp"
+#include "xtensor/core/xoperation.hpp"
+
+typedef xt::xarray<double> ml_array;
 
 namespace ML {
 
@@ -41,8 +44,8 @@ inline bool xarray_same_shape(xt::xarray<T> a1, xt::xarray<T> a2) {
  * @param features Feature xarray.
  * @return New xarray with bias column before features.
  */
-inline xt::xarray<double> generate_feat_bias(xt::xarray<double> &features) {
-    xt::xarray<double> fb = xt::ones<double>({ (size_t)features.shape().at(0), (size_t)features.shape().at(1) + 1 });
+inline ml_array generate_feat_bias(ml_array &features) {
+    ml_array fb = xt::ones<double>({ (size_t)features.shape().at(0), (size_t)features.shape().at(1) + 1 });
     for(size_t c = 0; c < features.shape().at(1); c += 1)
         xt::col(fb, c + 1) = xt::col(features, c);
     return std::move(fb);
@@ -59,7 +62,7 @@ inline xt::xarray<double> generate_feat_bias(xt::xarray<double> &features) {
  * @param y xarray of model outputs.
  * @return R^2 value (double).
  */
-inline double R_Squared(const xt::xarray<double> &y_lab, const xt::xarray<double> &y) {
+inline double R_Squared(const ml_array &y_lab, const ml_array &y) {
     // Make sure input shapes are the same
     if(!xarray_same_shape(y_lab, y)) {
         std::cerr << "Cannot calculate loss! y_label and y_train have different dimensions!\n";
@@ -72,6 +75,25 @@ inline double R_Squared(const xt::xarray<double> &y_lab, const xt::xarray<double
         return 1;
     double ss_res = xt::sum(xt::square(y_lab - y))();
     return 1 - (ss_res / ss_tot);
+}
+
+/**
+ * @brief Calculates accuracy value for classification models.
+ * 
+ * Takes model outputs and labels and calculates accuracy (TP + TN) / (TP + FP + TN + FN).
+ * This can be used to evaluate model performance for classification models that output { -1, 1 }.
+ * A accuracy value close to 1 indicates good performance.
+ * 
+ * @param y_lab xarray of expected/desired model output.
+ * @param y xarray of model outputs.
+ * @return accuracy value (double).
+ */
+inline double accuracy(const ml_array &y_lab, const ml_array &y) {
+    ml_array sum = xt::abs(y_lab + y);
+    double tot = (double)sum.shape().at(0);
+
+    ml_array counts = xt::where(sum > 0, 1.0, 0.0);
+    return xt::sum(counts)() / tot;
 }
 
 }

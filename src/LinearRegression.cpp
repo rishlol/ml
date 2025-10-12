@@ -105,6 +105,7 @@ double LinearRegression::SSE(const reg_array &y_lab, const reg_array &y) {
  * @param lr Step size for updating weights.
  */
 void LinearRegression::train(size_t epochs, double lr) {
+    reg_array feat_bias_T = xt::transpose(*feat_bias);
     for(size_t i = 0; i < epochs; i += 1) {
         // forward pass
         reg_array y_train = xt::linalg::dot(*feat_bias, weights);
@@ -112,7 +113,7 @@ void LinearRegression::train(size_t epochs, double lr) {
         std::cout << "Epoch: " << i + 1 << " Loss: " << loss << std::endl;
 
         // Calculate gradient and update weights: (2 / N) * x * (f(x) - y)
-        reg_array grad = (2.0 / (double)std::get<0>(fb_shape)) * xt::linalg::dot(xt::transpose(*feat_bias), (y_train - *y_label));
+        reg_array grad = (2.0 / (double)std::get<0>(fb_shape)) * xt::linalg::dot(feat_bias_T, (y_train - *y_label));
         weights -= lr * grad;
     }
     delete_feat_bias();
@@ -153,5 +154,5 @@ reg_array LinearRegression::output(reg_array input_feat) {
 }
 
 reg_array LinearRegression::operator()(reg_array input_feat) {
-    return std::move(output(input_feat));
+    return output(input_feat);
 }

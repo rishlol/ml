@@ -2,6 +2,9 @@
 #include "SupportVectorMachine.hpp"
 #include "utils/ML_CLIOptions.hpp"
 #include <iostream>
+#include "xtensor/containers/xarray.hpp"
+
+void validation(SupportVectorMachine &, std::string, bool);
 
 int main(int argc, char **argv) {
     ML_CLIOptions cli;
@@ -31,5 +34,22 @@ int main(int argc, char **argv) {
     std::cout << "Training with epochs=" << epochs << " lr=" << lr << std::endl;
     svm.train(epochs, lr);
 
+    if(cli.vm.count("test-file"))
+        validation(svm, cli.vm["test-file"].as<std::string>(), no_header);
+
     return 0;
+}
+
+void validation(SupportVectorMachine &svm, std::string val_file, bool no_header) {
+    Dataset val_data(val_file);
+    if(!val_data.isGood()) {
+        std::cerr << "Could not open validation dataset!\n";
+        return;
+    }
+
+    xt::xarray<double> f = ML::generate_feat_bias(val_data.get_features());
+    xt::xarray<double> labels = val_data.get_labels();
+    xt::xarray<double> outputs = svm(f);
+    std::cout << "Mean Hinge Loss: " << SupportVectorMachine::Hinge(labels, outputs) << std::endl;
+    std::cout << "Accuracy       : " << ML::accuracy(labels, outputs) << std::endl;
 }

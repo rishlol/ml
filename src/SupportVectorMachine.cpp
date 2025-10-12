@@ -62,6 +62,7 @@ double SupportVectorMachine::Hinge(const svm_array &y_lab, const svm_array &y) {
  * @param lr Step size for updating weights.
  */
 void SupportVectorMachine::train(size_t epochs, double lr) {
+    svm_array feat_bias_T = xt::transpose(*feat_bias);
     for(size_t i = 0; i < epochs; i += 1) {
         // forward pass
         svm_array y_train = xt::linalg::dot(*feat_bias, weights);     
@@ -72,9 +73,19 @@ void SupportVectorMachine::train(size_t epochs, double lr) {
         svm_array mask = 1.0 - (*y_label * y_train);
         svm_array g = xt::where(mask > 0.0, *y_label, 0.0);
 
-        svm_array grad = (-1.0 / std::get<0>(fb_shape)) * xt::linalg::dot(xt::transpose(*feat_bias), g);
+        svm_array grad = (-1.0 / std::get<0>(fb_shape)) * xt::linalg::dot(feat_bias_T, g);
         weights -= lr * grad;
     }
     delete_feat_bias();
     delete_y_label();
+}
+
+svm_array SupportVectorMachine::output(svm_array input_feat) {
+    svm_array raw = xt::linalg::dot(input_feat, weights);
+    svm_array classes = xt::where(raw >= 0.0, 1.0, -1.0);
+    return std::move(classes);
+}
+
+svm_array SupportVectorMachine::operator()(svm_array input_feat) {
+    return output(input_feat);
 }

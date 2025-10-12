@@ -4,5 +4,6 @@
 build
 .*
 
-# Ignore datasets
+# Ignore datasets/preprocessing code
 datasets
+preprocess.ipynb
