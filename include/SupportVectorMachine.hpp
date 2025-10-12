@@ -12,7 +12,7 @@ class SupportVectorMachine {
 private:
     svm_array *y_label = nullptr;
     svm_array *feat_bias = nullptr;         // (n, d + 1)
-    svm_array weights;                      // (d + 1, n)
+    svm_array weights;                      // (d + 1, 1)
     std::tuple<size_t, size_t> fb_shape;
 
     std::unordered_map<size_t, ZScaleNormalizer> feat_norms;

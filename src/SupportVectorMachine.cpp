@@ -75,4 +75,6 @@ void SupportVectorMachine::train(size_t epochs, double lr) {
         svm_array grad = (-1.0 / std::get<0>(fb_shape)) * xt::linalg::dot(xt::transpose(*feat_bias), g);
         weights -= lr * grad;
     }
+    delete_feat_bias();
+    delete_y_label();
 }
