@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     SupportVectorMachine svm(data, 28);
 
     // Train
-    ssize_t epochs = cli.vm["epochs"].as<size_t>();
+    size_t epochs = cli.vm["epochs"].as<size_t>();
     double lr = cli.vm["lr"].as<double>();
     std::cout << "Training with epochs=" << epochs << " lr=" << lr << std::endl;
     svm.train(epochs, lr);
