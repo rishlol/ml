@@ -3,7 +3,6 @@
 #include "utils/ML_Utils.hpp"
 #include <limits>
 #include "xtensor/containers/xarray.hpp"
-#include "xtensor/views/xview.hpp"
 #include "xtensor-blas/xlinalg.hpp"
 #include "xtensor/generators/xbuilder.hpp"
 
@@ -20,33 +19,7 @@
  * @param norm_lab bool: determines whether labels will be normalized.
  * @param start_norm size_t: column index from which normalization will be applied.
  */
-LinearRegression::LinearRegression(Dataset &d, bool norm_lab, size_t start_norm) {
-    // Get labels and normalize if needed
-    normalizeLabels = norm_lab;
-    y_label = new reg_array(d.get_labels());
-    if(normalizeLabels) {
-        y_norm.mean = xt::mean(*y_label)();
-        y_norm.std = xt::stddev(*y_label)();
-        *y_label = (*y_label - y_norm.mean) / y_norm.std;
-    }
-
-    // Create feature vector with bias column (first column)
-    feat_bias = new reg_array(ML::generate_feat_bias(d.get_features()));
-
-    // Store feature matrix shape and normalize
-    fb_shape = std::make_tuple(feat_bias->shape().at(0), feat_bias->shape().at(1));
-    for(size_t c = start_norm + 1; c < std::get<1>(fb_shape); c += 1) {
-        feat_norms.insert({ c, ZScaleNormalizer(
-            xt::mean(xt::col(*feat_bias, c))(),
-            xt::stddev(xt::col(*feat_bias, c))()
-        )});
-        ZScaleNormalizer c_norm = feat_norms.at(c);
-        xt::col(*feat_bias, c) = (xt::col(*feat_bias, c) - c_norm.mean) / c_norm.std;
-    }
-    
-    // Initialize weights
-    weights = xt::zeros<double>({ (size_t)std::get<1>(fb_shape), (size_t)1 });
-}
+LinearRegression::LinearRegression(Dataset &d, bool norm_lab, size_t start_norm) : Model(d, norm_lab, start_norm) {}
 
 LinearRegression::LinearRegression(Dataset &d) : LinearRegression(d, false, 0) {}
 LinearRegression::LinearRegression(Dataset &d, bool norm_lab) : LinearRegression(d, norm_lab, 0) {}

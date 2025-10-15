@@ -18,3 +18,7 @@ target_include_directories(linear_regression PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 add_executable(support_vector_machine svm.cpp src/SupportVectorMachine.cpp src/Dataset.cpp)
 target_link_libraries(support_vector_machine PRIVATE xtensor xtensor-blas Boost::program_options)
 target_include_directories(support_vector_machine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_executable(perceptron perc.cpp src/Perceptron.cpp src/Dataset.cpp)
+target_link_libraries(perceptron PRIVATE xtensor xtensor-blas Boost::program_options)
+target_include_directories(perceptron PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

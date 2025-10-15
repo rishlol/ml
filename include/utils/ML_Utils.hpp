@@ -89,11 +89,8 @@ inline double R_Squared(const ml_array &y_lab, const ml_array &y) {
  * @return accuracy value (double).
  */
 inline double accuracy(const ml_array &y_lab, const ml_array &y) {
-    ml_array sum = xt::abs(y_lab + y);
-    double tot = (double)sum.shape().at(0);
-
-    ml_array counts = xt::where(sum > 0, 1.0, 0.0);
-    return xt::sum(counts)() / tot;
+    ml_array correct = xt::equal(y_lab, y);
+    return xt::mean(correct)();
 }
 
 }
