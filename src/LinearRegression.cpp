@@ -1,24 +1,10 @@
 #include "LinearRegression.hpp"
-#include "Dataset.hpp"
-#include "utils/ML_Utils.hpp"
+#include "utils/Dataset.hpp"
 #include <limits>
 #include "xtensor/containers/xarray.hpp"
 #include "xtensor-blas/xlinalg.hpp"
 #include "xtensor/generators/xbuilder.hpp"
 
-/**
- * @brief Create LinearRegression from Dataset.
- * 
- * Prepares LinearRegression object for training.
- * Dataset `d` already stores feature and labels.
- * Constructor takes features and labels from Dataset `d`.
- * Also normalizes labels, adds bias column to feature matrix, initializes weights, stores label normalization information.
- * The first `start_norm - 1` columns of the Dataset feature matrix will not be normalized.
- * 
- * @param d Dataset object.
- * @param norm_lab bool: determines whether labels will be normalized.
- * @param start_norm size_t: column index from which normalization will be applied.
- */
 LinearRegression::LinearRegression(Dataset &d, bool norm_lab, size_t start_norm) : Model(d, norm_lab, start_norm) {}
 
 LinearRegression::LinearRegression(Dataset &d) : LinearRegression(d, false, 0) {}
@@ -34,7 +20,7 @@ LinearRegression::LinearRegression(Dataset &d, size_t start_norm) : LinearRegres
  * @param y xarray of model outputs.
  * @return MSE value (double).
  */
-double LinearRegression::MSE(const reg_array &y_lab, const reg_array &y) {
+double LinearRegression::MSE(const model_arr &y_lab, const model_arr &y) {
     // Make sure input shapes are the same
     if(!ML::xarray_same_shape(y_lab, y)) {
         std::cerr << "Cannot calculate loss! y_label and y_train have different dimensions!\n";
@@ -42,7 +28,7 @@ double LinearRegression::MSE(const reg_array &y_lab, const reg_array &y) {
     }
 
     // MSE
-    reg_array sq_diff = xt::square(y_lab - y);
+    model_arr sq_diff = xt::square(y_lab - y);
     double m = xt::mean(sq_diff)();
     return m;
 }
@@ -56,7 +42,7 @@ double LinearRegression::MSE(const reg_array &y_lab, const reg_array &y) {
  * @param y xarray of model outputs.
  * @return SSE value (double).
  */
-double LinearRegression::SSE(const reg_array &y_lab, const reg_array &y) {
+double LinearRegression::SSE(const model_arr &y_lab, const model_arr &y) {
     // Make sure input shapes are the same
     if(!ML::xarray_same_shape(y_lab, y)) {
         std::cerr << "Cannot calculate loss! y_label and y_train have different dimensions!\n";
@@ -64,7 +50,7 @@ double LinearRegression::SSE(const reg_array &y_lab, const reg_array &y) {
     }
 
     // SSE
-    reg_array sq_diff = xt::square(y_lab - y);
+    model_arr sq_diff = xt::square(y_lab - y);
     double s = xt::sum(sq_diff)();
     return s;
 }
@@ -78,15 +64,15 @@ double LinearRegression::SSE(const reg_array &y_lab, const reg_array &y) {
  * @param lr Step size for updating weights.
  */
 void LinearRegression::train(size_t epochs, double lr) {
-    reg_array feat_bias_T = xt::transpose(*feat_bias);
+    model_arr feat_bias_T = xt::transpose(*feat_bias);
     for(size_t i = 0; i < epochs; i += 1) {
         // forward pass
-        reg_array y_train = xt::linalg::dot(*feat_bias, weights);
+        model_arr y_train = xt::linalg::dot(*feat_bias, weights);
         double loss = MSE(*y_label, y_train);
         std::cout << "Epoch: " << i + 1 << " Loss: " << loss << std::endl;
 
         // Calculate gradient and update weights: (2 / N) * x * (f(x) - y)
-        reg_array grad = (2.0 / (double)std::get<0>(fb_shape)) * xt::linalg::dot(feat_bias_T, (y_train - *y_label));
+        model_arr grad = (2.0 / (double)std::get<0>(fb_shape)) * xt::linalg::dot(feat_bias_T, (y_train - *y_label));
         weights -= lr * grad;
     }
     delete_feat_bias();
@@ -102,8 +88,8 @@ void LinearRegression::train(size_t epochs, double lr) {
  * @param input_feat Feature matrix with bias column.
  * @return Model outputs without any normalization.
  */
-reg_array LinearRegression::output_raw(reg_array input_feat) {
-    reg_array y = (*this)(input_feat);
+model_arr LinearRegression::output_raw(model_arr input_feat) {
+    model_arr y = (*this)(input_feat);
     if(normalizeLabels)
         y = (y * y_norm.std) + y_norm.mean;
     return std::move(y);
@@ -117,15 +103,15 @@ reg_array LinearRegression::output_raw(reg_array input_feat) {
  * @param input_feat Feature matrix with bias column.
  * @return Model outputs.
  */
-reg_array LinearRegression::output(reg_array input_feat) {
+model_arr LinearRegression::output(model_arr input_feat) {
     for(size_t c = 3; c < input_feat.shape().at(1); c += 1) {
         ZScaleNormalizer c_norm = feat_norms.at(c);
         xt::col(input_feat, c) = (xt::col(input_feat, c) - c_norm.mean) / c_norm.std;
     }
-    reg_array y = xt::linalg::dot(input_feat, weights);
+    model_arr y = xt::linalg::dot(input_feat, weights);
     return std::move(y);
 }
 
-reg_array LinearRegression::operator()(reg_array input_feat) {
+model_arr LinearRegression::operator()(model_arr input_feat) {
     return output(input_feat);
 }

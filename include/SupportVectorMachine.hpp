@@ -1,10 +1,7 @@
 #pragma once
 #include "Model.hpp"
-#include "Dataset.hpp"
-#include "utils/ML_Utils.hpp"
+#include "utils/Dataset.hpp"
 #include "xtensor/containers/xarray.hpp"
-
-typedef xt::xarray<double> svm_array;
 
 class SupportVectorMachine : public Model {
 public:
@@ -15,8 +12,8 @@ public:
         delete_y_label();
     }
 
-    static double Hinge(const svm_array &, const svm_array &);
+    static double Hinge(const model_arr &, const model_arr &);
     void train(size_t, double);
-    svm_array output(svm_array);
-    svm_array operator()(svm_array);
+    model_arr output(model_arr);
+    model_arr operator()(model_arr);
 };

@@ -1,9 +1,7 @@
 #pragma once
 #include "Model.hpp"
-#include "Dataset.hpp"
+#include "utils/Dataset.hpp"
 #include "xtensor/containers/xarray.hpp"
-
-typedef xt::xarray<double> perc_arr;
 
 class Perceptron : public Model {
 public:
@@ -14,8 +12,8 @@ public:
         delete_y_label();
     }
 
-    static double P_Loss(const perc_arr &, const perc_arr &);
+    static double P_Loss(const model_arr &, const model_arr &);
     void train(size_t, double);
-    perc_arr output(perc_arr);
-    perc_arr operator()(perc_arr);
+    model_arr output(model_arr);
+    model_arr operator()(model_arr);
 };

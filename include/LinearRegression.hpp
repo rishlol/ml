@@ -1,10 +1,7 @@
 #pragma once
 #include "Model.hpp"
-#include "Dataset.hpp"
-#include "utils/ML_Utils.hpp"
+#include "utils/Dataset.hpp"
 #include "xtensor/containers/xarray.hpp"
-
-typedef xt::xarray<double> reg_array;
 
 class LinearRegression : public Model {
 public:
@@ -21,10 +18,10 @@ public:
     inline double getYMean() const { return y_norm.mean; }
     inline double getYSTD() const { return y_norm.std; }
 
-    static double MSE(const reg_array &, const reg_array &);
-    static double SSE(const reg_array &, const reg_array &);
+    static double MSE(const model_arr &, const model_arr &);
+    static double SSE(const model_arr &, const model_arr &);
     void train(size_t, double);
-    reg_array output_raw(reg_array);
-    reg_array output(reg_array);
-    reg_array operator()(reg_array);
+    model_arr output_raw(model_arr);
+    model_arr output(model_arr);
+    model_arr operator()(model_arr);
 };
